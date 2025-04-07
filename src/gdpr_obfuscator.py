@@ -20,7 +20,7 @@ def csv_string_to_list(line: str) -> List[str]:
 
 
 def list_to_csv_string(lst: List[str]) -> str:
-    return ""
+    return ",".join(lst) + "\n"
 
 
 def get_col_nums(header: str, pii_fields: List[str]) -> List[int]:
