@@ -1,0 +1,7 @@
+from src.gdpr_obfuscator import list_to_csv_string
+
+
+def test_list_to_csv_string_returns_a_str():
+    test_list = ["test1", "test2", "test3"]
+    output = list_to_csv_string(test_list)
+    assert isinstance(output, str)
