@@ -26,10 +26,6 @@ def csv_string_to_list(line: str) -> List[str]:
     return line.strip().split(",")
 
 
-def list_to_csv_string(lst: List[str]) -> str:
-    return ",".join(lst) + "\n"
-
-
 def get_col_nums(header: str, pii_fields: List[str]) -> List[int]:
     return [index for index, item in enumerate(header) if item in pii_fields]
 
@@ -38,4 +34,4 @@ def edit_line(line: str, col_nums: List[int]) -> str:
     lst = csv_string_to_list(line)
     for num in col_nums:
         lst[num] = "***"
-    return list_to_csv_string(lst)
+    return ",".join(lst) + "\n"
