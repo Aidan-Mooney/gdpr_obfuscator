@@ -16,7 +16,7 @@ def extract_bucket_key(s3_path: str) -> Tuple[str, str]:
 
 
 def csv_string_to_list(line: str) -> List[str]:
-    return []
+    return line.strip().split(",")
 
 
 def list_to_csv_string(lst: List[str]) -> str:
