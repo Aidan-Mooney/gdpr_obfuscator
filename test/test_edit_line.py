@@ -27,3 +27,10 @@ def test_edit_line_can_replace_multiple_words_with_asterisks():
     test_nums = [1, 3]
     output = edit_line(test_line, test_nums)
     assert output == "test1,***,test3,***,test5\n"
+
+
+def test_edit_line_ends_with_a_new_line_character():
+    test_line = "test1,test2,test3\n"
+    test_nums = [1]
+    output = edit_line(test_line, test_nums)
+    assert output[-1] == "\n"
