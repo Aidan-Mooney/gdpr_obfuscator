@@ -1,0 +1,28 @@
+name: GDPR-Obfuscator-Project-Integrate
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  run-tests:
+    name: run-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Create Environment
+        run: make create-environment
+
+      - name: Install Dependencies
+        run: make install-requirements
+
+      - name: Run Checks
+        run: make run-checks
