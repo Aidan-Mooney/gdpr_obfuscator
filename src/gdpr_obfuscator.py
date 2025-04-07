@@ -11,8 +11,15 @@ def gdpr_obfuscator(event: dict) -> BytesIO:
     return BytesIO()
 
 
-def extract_bucket_key(s3_path: str) -> Tuple[str, str]:
-    return "", ""
+def extract_bucket_key(s3_uri: str) -> Tuple[str, str]:
+    if not s3_uri.startswith("s3://"):
+        raise ValueError(f"Invalid S3 URI: {s3_uri}")
+    without_prefix = s3_uri[5:]
+    parts = without_prefix.split("/", 1)
+    if len(parts) != 2 or parts[0] == "":
+        raise ValueError(f"S3 URI must include bucket and key: {s3_uri}")
+    bucket, key = parts
+    return bucket, key
 
 
 def csv_string_to_list(line: str) -> List[str]:
@@ -28,4 +35,7 @@ def get_col_nums(header: str, pii_fields: List[str]) -> List[int]:
 
 
 def edit_line(line: str, col_nums: List[int]) -> str:
-    return ""
+    lst = csv_string_to_list(line)
+    for num in col_nums:
+        lst[num] = "***"
+    return list_to_csv_string(lst)
