@@ -24,7 +24,7 @@ def list_to_csv_string(lst: List[str]) -> str:
 
 
 def get_col_nums(header: str, pii_fields: List[str]) -> List[int]:
-    return []
+    return [index for index, item in enumerate(header) if item in pii_fields]
 
 
 def edit_line(line: str, col_nums: List[int]) -> str:
