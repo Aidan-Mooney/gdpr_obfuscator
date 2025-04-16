@@ -58,7 +58,18 @@ def csv_string_to_list(line: str) -> List[str]:
 
 
 def get_col_nums(headers: List[str], pii_fields: List[str]) -> List[int]:
-    return [index for index, item in enumerate(headers) if item in pii_fields]
+    fields_set = set(pii_fields)
+    output = []
+    found_fields = set()
+    for index, item in enumerate(headers):
+        if item in fields_set:
+            output.append(index)
+            found_fields.add(item)
+    unfound_fields = fields_set - found_fields
+    if not unfound_fields:
+        return output
+    else:
+        raise (ValueError(f"pii_fields not found in {unfound_fields}"))
 
 
 def edit_line(line: str, col_nums: List[int]) -> str:

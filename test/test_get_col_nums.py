@@ -1,3 +1,5 @@
+from pytest import raises
+
 from src.gdpr_obfuscator import get_col_nums
 
 
@@ -60,3 +62,21 @@ def test_get_col_nums_will_return_all_indexes_if_a_pii_field_is_in_the_headers_l
     assert len(output) == 2
     assert 1 in output
     assert 6 in output
+
+
+def test_get_col_nums_raises_value_error_if_pii_field_inst_in_headers_list():
+    test_header = [
+        "col1",
+        "col2",
+        "col3",
+        "col4",
+        "col5",
+        "col6",
+        "col2",
+        "col8",
+        "col9",
+    ]
+    test_pii_fields = ["im not a header, sue me"]
+    with raises(ValueError) as err:
+        get_col_nums(test_header, test_pii_fields)
+    assert str(err.value) == "pii_fields not found in {'im not a header, sue me'}"
