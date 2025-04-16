@@ -66,6 +66,20 @@ def test_gdpr_obfuscator_returns_the_same_contents_when_pii_fields_are_empty(s3_
     assert result == csv_content
 
 
+def test_gdpr_obfuscator_returns_empty_byte_object_when_csv_has_no_body(s3_setup):
+    bucket = "test-bucket"
+    key = "test-key.csv"
+    csv_content = ""
+    s3_setup(bucket, key, csv_content)
+    event = {
+        "file_to_obfuscate": f"s3://{bucket}/{key}",
+        "pii_fields": [],
+    }
+    output = gdpr_obfuscator(event)
+    result = output.read().decode("utf-8")
+    assert result == ""
+
+
 def test_gdpr_obfuscator_returns_the_same_contents_when_the_csv_only_has_headers(
     s3_setup,
 ):
