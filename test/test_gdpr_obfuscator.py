@@ -2,7 +2,7 @@ from src.gdpr_obfuscator import gdpr_obfuscator, csv_string_to_list
 from io import BytesIO
 from boto3 import client
 from botocore.exceptions import ClientError
-from os import environ, getenv
+from os import environ, getenv, path
 import time
 from pytest import raises, fixture, mark
 from moto import mock_aws
@@ -255,3 +255,11 @@ def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_data(
     gdpr_obfuscator(event)
     t2 = time.time()
     assert t2 - t1 <= 60
+
+
+def test_module_size_doesnt_exceed_lambda_regulations():
+    file_path = "src/gdpr_obfuscator.py"
+    max_size_bytes = 250 * 1024 * 1024
+
+    size = path.getsize(file_path)
+    assert size < max_size_bytes
