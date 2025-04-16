@@ -1,9 +1,10 @@
-from src.gdpr_obfuscator import gdpr_obfuscator
+from src.gdpr_obfuscator import gdpr_obfuscator, csv_string_to_list
 from io import BytesIO
 from boto3 import client
 from botocore.exceptions import ClientError
-from os import environ
-from pytest import raises, fixture
+from os import environ, getenv
+import time
+from pytest import raises, fixture, mark
 from moto import mock_aws
 from unittest.mock import patch
 
@@ -31,11 +32,15 @@ def patch_s3_client(s3_client):
 
 @fixture
 def s3_setup(s3_client):
-    def _setup(bucket, key, csv_content):
+    def _setup(bucket, key, body, file_path=False):
         s3_client.create_bucket(
             Bucket=bucket, CreateBucketConfiguration={"LocationConstraint": "eu-west-2"}
         )
-        s3_client.put_object(Bucket=bucket, Key=key, Body=csv_content.encode("utf-8"))
+        if file_path:
+            with open(body, "rb") as f:
+                s3_client.put_object(Bucket=bucket, Key=key, Body=f)
+        else:
+            s3_client.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"))
 
     return _setup
 
@@ -231,3 +236,22 @@ def test_gdpr_obuscator_raises_value_error_if_file_is_an_incorrect_format(s3_set
     with raises(ValueError) as err:
         gdpr_obfuscator(event)
     assert str(err.value) == "target file must be a csv"
+
+
+@mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
+def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_data(
+    s3_setup,
+):
+    bucket = "test-bucket"
+    key = "test-key.csv"
+    csv_content = "test-data/test_csv.csv"
+    s3_setup(bucket, key, csv_content, True)
+
+    with open("test-data/test_csv.csv", "r", encoding="utf-8") as f:
+        heading_string = f.readline()
+    headings = csv_string_to_list(heading_string)
+    event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": headings}
+    t1 = time.time()
+    gdpr_obfuscator(event)
+    t2 = time.time()
+    assert t2 - t1 <= 60
