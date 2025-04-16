@@ -3,3 +3,4 @@ ruff
 pytest
 pytest-testdox
 pytest-cov
+moto[s3]
