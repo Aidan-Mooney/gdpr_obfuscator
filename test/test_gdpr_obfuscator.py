@@ -238,6 +238,20 @@ def test_gdpr_obuscator_raises_value_error_if_file_is_an_incorrect_format(s3_set
     assert str(err.value) == "target file must be a csv"
 
 
+def test_gdpr_obfuscator_raises_error_if_pii_field_is_not_a_header(s3_setup):
+    bucket = "test-bucket"
+    key = "test-key.csv"
+    csv_content = "name,age,date of birth\n" + "Bart,10,1981-04-01\n"
+    s3_setup(bucket, key, csv_content)
+    event = {
+        "file_to_obfuscate": f"s3://{bucket}/{key}",
+        "pii_fields": ["email", "name"],
+    }
+    with raises(ValueError) as err:
+        gdpr_obfuscator(event)
+    assert str(err.value) == "pii_fields not found in {'email'}"
+
+
 @mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
 def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_data(
     s3_setup,
