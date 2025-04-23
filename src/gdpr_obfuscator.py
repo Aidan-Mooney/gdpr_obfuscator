@@ -83,6 +83,17 @@ def get_col_nums(headers: List[str], pii_fields: List[str]) -> List[int]:
 
 
 def edit_line(line: str, col_nums: List[int]) -> str:
+    """Obfuscate specific columns in a CSV line by replacing their values.
+
+
+    Args:
+        line (str): A single line of CSV data.
+        col_nums (List[int]): Indices of the columns to obfuscate.
+
+
+    Returns:
+        str: The CSV line with specified columns replaced by '***'.
+    """
     lst = csv_string_to_list(line)
     for num in col_nums:
         lst[num] = "***"
