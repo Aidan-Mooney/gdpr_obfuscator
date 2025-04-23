@@ -68,6 +68,21 @@ def csv_string_to_list(line: str) -> List[str]:
 
 
 def get_col_nums(headers: List[str], pii_fields: List[str]) -> List[int]:
+    """Get the indices of PII fields in the CSV headers.
+
+
+    Args:
+        headers (List[str]): The list of CSV header names.
+        pii_fields (List[str]): Field names that should be obfuscated.
+
+
+    Returns:
+        List[int]: Indices of the PII fields within the headers list.
+
+
+    Raises:
+        ValueError: If any PII field is not found in the headers.
+    """
     fields_set = set(pii_fields)
     output = []
     found_fields = set()
