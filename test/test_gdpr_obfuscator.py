@@ -1,5 +1,6 @@
 from src.gdpr_obfuscator import gdpr_obfuscator, csv_string_to_list
 from io import BytesIO
+import json
 from boto3 import client
 from botocore.exceptions import ClientError
 from os import environ, getenv, path
@@ -34,9 +35,9 @@ def patch_s3_client(s3_client):
 def patch_obfuscators():
     with (
         patch("src.gdpr_obfuscator.obfuscate_csv") as mock_csv,
-        patch("src.gdpr_obfuscator.obfuscate_json") as mock_json,
+        patch("src.gdpr_obfuscator.obfuscate_jsonl") as mock_jsonl,
     ):
-        yield mock_csv, mock_json
+        yield mock_csv, mock_jsonl
 
 
 @fixture
@@ -96,8 +97,33 @@ class TestCoreFunctionalityOfGdprObfuscator:
 
         assert result == expected
 
-    def test_gdpr_obfuscator_triggers_obfuscate_json(self, s3_setup, patch_obfuscators):
-        assert True
+    def test_gdpr_obfuscator_triggers_obfuscate_jsonl(
+        self, s3_setup, patch_obfuscators
+    ):
+        bucket = "test-bucket"
+        key = "test-key.jsonl"
+        jsonl_lines = [
+            {"age": 31, "email": "fake@email.com", "name": "Fake Namington"},
+            {"age": 10, "email": "bart@email.com", "name": "Bart Simpson"},
+            {"age": 10, "email": "Milhouse@email.com", "name": "Milhouse van Houten"},
+            {"age": 44, "email": "Skinner@email.com", "name": "Seymour Skinner"},
+        ]
+        jsonl_str = ""
+        expected = ""
+        for line in jsonl_lines:
+            jsonl_str += json.dumps(line) + "\n"
+            line["name"] = "***"
+            line["email"] = "***"
+            expected += json.dumps(line) + "\n"
+        s3_setup(bucket, key, jsonl_str)
+        _, mock_jsonl = patch_obfuscators
+        mock_jsonl.return_value = BytesIO(expected.encode("utf-8"))
+
+        event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": []}
+        output = gdpr_obfuscator(event)
+        result = output.read().decode("utf-8")
+
+        assert result == expected
 
 
 class TestGpdrObfuscatorRaisesErrorsCorrectly:
@@ -238,11 +264,23 @@ class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
         assert t2 - t1 <= 60
 
     @mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
-    def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_json_data(
+    def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_jsonl_data(
         self,
         s3_setup,
     ):
-        assert True
+        bucket = "test-bucket"
+        key = "test-key.jsonl"
+        jsonl_content = "test-data/test_jsonl.jsonl"
+        s3_setup(bucket, key, jsonl_content, True)
+
+        with open("test-data/test_jsonl.jsonl", "r", encoding="utf-8") as f:
+            first_line = json.loads(f.readline())
+        keys_list = list(first_line.keys())
+        event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": keys_list}
+        t1 = time.time()
+        gdpr_obfuscator(event)
+        t2 = time.time()
+        assert t2 - t1 <= 60
 
     def test_module_size_doesnt_exceed_lambda_regulations(self):
         file_path = "src/gdpr_obfuscator.py"
