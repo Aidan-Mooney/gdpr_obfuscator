@@ -43,6 +43,21 @@ def gdpr_obfuscator(event: dict) -> BytesIO:
 
 
 def extract_bucket_key(s3_uri: str) -> Tuple[str, str]:
+    """Extract the bucket name and key from an S3 URI.
+
+
+    Args:
+        s3_uri (str): The S3 URI in the format 's3://bucket/key'.
+
+
+    Returns:
+        Tuple[str, str]: A tuple containing the bucket name and key.
+
+
+    Raises:
+        ValueError: If the URI is not a valid S3 URI.
+        ValueError: If the URI does not contain both a bucket and a key.
+    """
     if not s3_uri.startswith("s3://"):
         raise ValueError(f"Invalid S3 URI: {s3_uri}")
     without_prefix = s3_uri[5:]
