@@ -53,6 +53,21 @@ def gdpr_obfuscator(event: dict) -> BytesIO:
 
 
 def obfuscate_csv(body, pii_fields):
+    """Obfuscate specified fields in a CSV file-like object.
+
+    Reads a CSV input stream, replaces the values of specified PII fields with '***',
+    and returns the modified content as a BytesIO stream.
+
+    Args:
+        body: A file-like object (e.g., BytesIO) containing the CSV data.
+        pii_fields (List[str]): A list of header names to be obfuscated.
+
+    Returns:
+        BytesIO: A stream containing the obfuscated CSV data.
+
+    Raises:
+        ValueError: If any specified pii_fields are not found in the CSV header.
+    """
     input_stream = TextIOWrapper(body, encoding="utf-8")
 
     output_buffer = BytesIO()
@@ -69,6 +84,21 @@ def obfuscate_csv(body, pii_fields):
 
 
 def obfuscate_jsonl(body, pii_fields):
+    """Obfuscate specified fields in a JSONL (JSON Lines) file-like object.
+
+    Reads a stream of JSON objects (one per line), replaces the values of specified
+    PII fields with '***', and returns the modified content as a BytesIO stream.
+
+    Args:
+        body: A file-like object (e.g., BytesIO) containing JSONL data.
+        pii_fields (List[str]): A list of field names to be obfuscated in each JSON object.
+
+    Returns:
+        BytesIO: A stream containing the obfuscated JSONL data.
+
+    Raises:
+        ValueError: If a specified pii_field is not present in a JSON object.
+    """
     input_stream = TextIOWrapper(body, encoding="utf-8")
 
     output_buffer = BytesIO()
