@@ -42,15 +42,22 @@ def gdpr_obfuscator(event: dict) -> BytesIO:
         raise TypeError("pii_fields value must be a list of strings")
 
     bucket, key = extract_bucket_key(event["file_to_obfuscate"])
-    if not key.endswith(".csv"):
-        raise ValueError("target file must be a csv")
     response = s3_client.get_object(Bucket=bucket, Key=key)
-    input_stream = TextIOWrapper(response["Body"], encoding="utf-8")
+
+    file_types = [(".csv", obfuscate_csv), (".json", obfuscate_json)]
+    for file_type, obfuscate_func in file_types:
+        if key.endswith(file_type):
+            return obfuscate_func(response["Body"], event["pii_fields"])
+    raise ValueError("target file must be a csv or json")
+
+
+def obfuscate_csv(body, pii_fields):
+    input_stream = TextIOWrapper(body, encoding="utf-8")
 
     output_buffer = BytesIO()
 
     header = input_stream.readline()
-    col_nums = get_col_nums(csv_string_to_list(header), event["pii_fields"])
+    col_nums = get_col_nums(csv_string_to_list(header), pii_fields)
     output_buffer.write(header.encode("utf-8"))
 
     for line in input_stream:
@@ -58,6 +65,10 @@ def gdpr_obfuscator(event: dict) -> BytesIO:
 
     output_buffer.seek(0)
     return output_buffer
+
+
+def obfuscate_json():
+    return
 
 
 def extract_bucket_key(s3_uri: str) -> Tuple[str, str]:
@@ -127,7 +138,7 @@ def get_col_nums(headers: List[str], pii_fields: List[str]) -> List[int]:
     if not unfound_fields:
         return output
     else:
-        raise (ValueError(f"pii_fields not found in {unfound_fields}"))
+        raise (ValueError(f"The pii_fields '{unfound_fields}' not found in headers."))
 
 
 def edit_line(line: str, col_nums: List[int]) -> str:

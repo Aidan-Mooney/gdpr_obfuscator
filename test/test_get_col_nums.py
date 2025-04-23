@@ -79,4 +79,7 @@ def test_get_col_nums_raises_value_error_if_pii_field_inst_in_headers_list():
     test_pii_fields = ["im not a header, sue me"]
     with raises(ValueError) as err:
         get_col_nums(test_header, test_pii_fields)
-    assert str(err.value) == "pii_fields not found in {'im not a header, sue me'}"
+    assert (
+        str(err.value)
+        == "The pii_fields '{'im not a header, sue me'}' not found in headers."
+    )
