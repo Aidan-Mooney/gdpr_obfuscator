@@ -54,6 +54,16 @@ def extract_bucket_key(s3_uri: str) -> Tuple[str, str]:
 
 
 def csv_string_to_list(line: str) -> List[str]:
+    """Convert a CSV-formatted string into a list of values.
+
+
+    Args:
+        line (str): A single line of CSV data.
+
+
+    Returns:
+        List[str]: A list of values parsed from the CSV line.
+    """
     return line.strip().split(",")
 
 
