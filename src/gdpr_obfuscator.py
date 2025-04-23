@@ -1,5 +1,6 @@
 from boto3 import client
 from io import TextIOWrapper, BytesIO
+import json
 
 from typing import List, Tuple
 
@@ -44,7 +45,7 @@ def gdpr_obfuscator(event: dict) -> BytesIO:
     bucket, key = extract_bucket_key(event["file_to_obfuscate"])
     response = s3_client.get_object(Bucket=bucket, Key=key)
 
-    file_types = [(".csv", obfuscate_csv), (".json", obfuscate_json)]
+    file_types = [(".csv", obfuscate_csv), (".jsonl", obfuscate_jsonl)]
     for file_type, obfuscate_func in file_types:
         if key.endswith(file_type):
             return obfuscate_func(response["Body"], event["pii_fields"])
@@ -67,8 +68,24 @@ def obfuscate_csv(body, pii_fields):
     return output_buffer
 
 
-def obfuscate_json():
-    return
+def obfuscate_jsonl(body, pii_fields):
+    input_stream = TextIOWrapper(body, encoding="utf-8")
+
+    output_buffer = BytesIO()
+
+    for line in input_stream:
+        line_dict = json.loads(line)
+        new_line_dict = line_dict.copy()
+        for field in pii_fields:
+            if field in line_dict:
+                new_line_dict[field] = "***"
+            else:
+                raise ValueError(f"The pii_field '{field}' not found in headers.")
+        new_line = json.dumps(new_line_dict) + "\n"
+        output_buffer.write(new_line.encode("utf-8"))
+
+    output_buffer.seek(0)
+    return output_buffer
 
 
 def extract_bucket_key(s3_uri: str) -> Tuple[str, str]:
