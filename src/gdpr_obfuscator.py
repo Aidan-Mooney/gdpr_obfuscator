@@ -8,6 +8,24 @@ s3_client = client("s3")
 
 
 def gdpr_obfuscator(event: dict) -> BytesIO:
+    """Obfuscate PII fields in a CSV file stored in S3.
+
+    This function expects an event dictionary containing the S3 URI of the target CSV file
+    and a list of PII fields to be obfuscated. It returns a `BytesIO` object containing
+    the modified CSV content with specified fields replaced by '***'.
+
+    Args:
+        event (dict): A dictionary with the following keys:
+            - 'file_to_obfuscate' (str): The S3 URI of the CSV file.
+            - 'pii_fields' (List[str]): A list of field names to be obfuscated.
+
+    Returns:
+        BytesIO: A stream containing the obfuscated CSV file.
+
+    Raises:
+        TypeError: If `event` is not a dictionary or has invalid/missing fields.
+        ValueError: If the file is not a CSV or the S3 URI is invalid.
+    """
     if not isinstance(event, dict):
         raise TypeError("event must be a dictionary")
     expected_keys = {"file_to_obfuscate", "pii_fields"}
