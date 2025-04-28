@@ -45,14 +45,18 @@ def gdpr_obfuscator(event: dict) -> BytesIO:
     bucket, key = extract_bucket_key(event["file_to_obfuscate"])
     response = s3_client.get_object(Bucket=bucket, Key=key)
 
-    file_types = [(".csv", obfuscate_csv), (".jsonl", obfuscate_jsonl)]
+    file_types = [
+        (".csv", obfuscate_csv),
+        (".jsonl", obfuscate_jsonl),
+        (".json", obfuscate_json),
+    ]
     for file_type, obfuscate_func in file_types:
         if key.endswith(file_type):
             return obfuscate_func(response["Body"], event["pii_fields"])
     raise ValueError("target file must be a csv or json")
 
 
-def obfuscate_csv(body, pii_fields):
+def obfuscate_csv(body: BytesIO, pii_fields: List[str]) -> BytesIO:
     """Obfuscate specified fields in a CSV file-like object.
 
     Reads a CSV input stream, replaces the values of specified PII fields with '***',
@@ -83,7 +87,7 @@ def obfuscate_csv(body, pii_fields):
     return output_buffer
 
 
-def obfuscate_jsonl(body, pii_fields):
+def obfuscate_jsonl(body: BytesIO, pii_fields: List[str]) -> BytesIO:
     """Obfuscate specified fields in a JSONL (JSON Lines) file-like object.
 
     Reads a stream of JSON objects (one per line), replaces the values of specified
@@ -114,6 +118,47 @@ def obfuscate_jsonl(body, pii_fields):
         new_line = json.dumps(new_line_dict) + "\n"
         output_buffer.write(new_line.encode("utf-8"))
 
+    output_buffer.seek(0)
+    return output_buffer
+
+
+def obfuscate_json(body: BytesIO, pii_fields: List[str]) -> BytesIO:
+    """Obfuscate specified fields in a JSON file-like object.
+
+    Reads a JSON input stream, replaces the values of specified PII fields with '***',
+    and returns the modified content as a BytesIO stream.
+
+    Args:
+        body: A file-like object (e.g., BytesIO) containing the JSON data.
+        pii_fields (List[str]): A list of header names to be obfuscated.
+
+    Returns:
+        BytesIO: A stream containing the obfuscated JSON data.
+
+    Raises:
+        ValueError: If any specified pii_fields are not found in the JSON header.
+        JSONDecodeError: If body contains invalid JSON.
+    """
+    file_content = json.load(body)
+    output_buffer = BytesIO()
+    if isinstance(file_content, dict):
+        for key, value in file_content.items():
+            for row in value:
+                for field in pii_fields:
+                    if field in row:
+                        row[field] = "***"
+                    else:
+                        raise ValueError(
+                            f"The pii_field '{field}' not found in headers."
+                        )
+    elif isinstance(file_content, list):
+        for row in file_content:
+            for field in pii_fields:
+                if field in row:
+                    row[field] = "***"
+                else:
+                    raise ValueError(f"The pii_field '{field}' not found in headers.")
+    output_buffer.write(json.dumps(file_content).encode("utf-8"))
     output_buffer.seek(0)
     return output_buffer
 

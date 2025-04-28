@@ -36,8 +36,9 @@ def patch_obfuscators():
     with (
         patch("src.gdpr_obfuscator.obfuscate_csv") as mock_csv,
         patch("src.gdpr_obfuscator.obfuscate_jsonl") as mock_jsonl,
+        patch("src.gdpr_obfuscator.obfuscate_json") as mock_json,
     ):
-        yield mock_csv, mock_jsonl
+        yield mock_csv, mock_jsonl, mock_json
 
 
 @fixture
@@ -63,7 +64,7 @@ class TestCoreFunctionalityOfGdprObfuscator:
         key = "test-key.csv"
         csv_content = "headers\ncontent\n"
         s3_setup(bucket, key, csv_content)
-        mock_csv, _ = patch_obfuscators
+        mock_csv, _, _ = patch_obfuscators
         mock_csv.return_value = BytesIO(csv_content.encode("utf-8"))
 
         event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": []}
@@ -88,7 +89,7 @@ class TestCoreFunctionalityOfGdprObfuscator:
             + "10,***,***\n"
             + "44,***,***\n"
         )
-        mock_csv, _ = patch_obfuscators
+        mock_csv, _, _ = patch_obfuscators
         mock_csv.return_value = BytesIO(expected.encode("utf-8"))
 
         event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": []}
@@ -116,7 +117,7 @@ class TestCoreFunctionalityOfGdprObfuscator:
             line["email"] = "***"
             expected += json.dumps(line) + "\n"
         s3_setup(bucket, key, jsonl_str)
-        _, mock_jsonl = patch_obfuscators
+        _, mock_jsonl, _ = patch_obfuscators
         mock_jsonl.return_value = BytesIO(expected.encode("utf-8"))
 
         event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": []}
@@ -124,6 +125,34 @@ class TestCoreFunctionalityOfGdprObfuscator:
         result = output.read().decode("utf-8")
 
         assert result == expected
+
+    def test_gdpr_obfuscator_triggers_obfuscate_json(self, s3_setup, patch_obfuscators):
+        bucket = "test-bucket"
+        key = "test-key.json"
+        jsonl_lines = [
+            {"age": 31, "email": "fake@email.com", "name": "Fake Namington"},
+            {"age": 10, "email": "bart@email.com", "name": "Bart Simpson"},
+            {"age": 10, "email": "Milhouse@email.com", "name": "Milhouse van Houten"},
+            {"age": 44, "email": "Skinner@email.com", "name": "Seymour Skinner"},
+        ]
+        expected_lines = [
+            {"age": 31, "email": "***", "name": "***"},
+            {"age": 10, "email": "***", "name": "***"},
+            {"age": 10, "email": "***", "name": "***"},
+            {"age": 44, "email": "***", "name": "***"},
+        ]
+        jsonl_str = json.dumps(jsonl_lines)
+        expected_str = json.dumps(expected_lines)
+        s3_setup(bucket, key, jsonl_str)
+        _, _, mock_json = patch_obfuscators
+        mock_json.return_value = BytesIO(expected_str.encode("utf-8"))
+
+        event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": []}
+
+        output = gdpr_obfuscator(event)
+        result = output.read().decode("utf-8")
+
+        assert result == expected_str
 
 
 class TestGpdrObfuscatorRaisesErrorsCorrectly:
@@ -277,6 +306,25 @@ class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
             first_line = json.loads(f.readline())
         keys_list = list(first_line.keys())
         event = {"file_to_obfuscate": f"s3://{bucket}/{key}", "pii_fields": keys_list}
+        t1 = time.time()
+        gdpr_obfuscator(event)
+        t2 = time.time()
+        assert t2 - t1 <= 60
+
+    @mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
+    def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_json_data(
+        self,
+        s3_setup,
+    ):
+        bucket = "test-bucket"
+        key = "test-key.json"
+        jsonl_content = "test-data/test_json.json"
+        s3_setup(bucket, key, jsonl_content, True)
+
+        event = {
+            "file_to_obfuscate": f"s3://{bucket}/{key}",
+            "pii_fields": ["id", "text"],
+        }
         t1 = time.time()
         gdpr_obfuscator(event)
         t2 = time.time()
