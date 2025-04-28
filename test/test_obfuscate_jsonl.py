@@ -69,7 +69,7 @@ def test_obfuscate_jsonl_hides_info_of_a_jsonl_with_multiple_lines():
     assert result == expected
 
 
-def test_obfuscate_csv_raises_error_if_pii_field_is_not_a_header():
+def test_obfuscate_jsonl_raises_error_if_pii_field_is_not_a_header():
     jsonl_content = {
         "age": 31,
         "email": "fake@email.com",
