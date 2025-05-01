@@ -31,10 +31,22 @@ cd <repo-directory>
 make install-requirements
 ```
 
-3. Test the module is working correctly:
+## Testing
+
+To test the module is working correctly run:
 
 ```bash
 make run-checks
+```
+
+During production I wrote tests to check the module obfuscates the file types in less than 60 seconds. If you would like to do this, for example, for a csv:
+
+1. Add the file to the test-data folder with the name test-csv.csv
+
+2. Now run:
+
+```bash
+TEST_TYPE=csv make run-checks
 ```
 
 ## Usage
@@ -64,17 +76,16 @@ This will save the output bytes to a csv file.
 
 ```
 gdpr-obfuscator/
+├── requirements/
+|   ├──requirements-dev-tools.txt
+|   ├── requirements-external.txt
+|   └── requirements-lambda.txt
 ├── src/
 │   └── gdpr_obfuscator.py
 ├── test/
 │   └── [multiple test files]
 ├── test-data/
-│   ├── test_csv.csv
-│   ├── test_json.json
-│   └── test_jsonl.jsonl
-├── requirements-external.txt
-├── requirements-lambda.txt
-├── requirements-dev-tools.txt
+|
 ├── Makefile
 └── README.md
 ```
