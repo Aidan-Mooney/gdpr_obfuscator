@@ -19,7 +19,6 @@ Currently supports:
 ## Dependencies
 
 - Python 3.8+
-- pip (comes with Python 3.4+)
 - make (required for running Makefile commands)
 - boto3
 
