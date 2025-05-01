@@ -272,8 +272,9 @@ class TestGpdrObfuscatorRaisesErrorsCorrectly:
         assert str(err.value) == "target file must be a csv or json"
 
 
+@mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
 class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
-    @mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
+    @mark.skipif(getenv("TEST_TYPE") != "csv", reason="Skipped unless TEST_TYPE=csv")
     def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_csv_data(
         self,
         s3_setup,
@@ -292,7 +293,9 @@ class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
         t2 = time.time()
         assert t2 - t1 <= 60
 
-    @mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
+    @mark.skipif(
+        getenv("TEST_TYPE") != "jsonl", reason="Skipped unless TEST_TYPE=jsonl"
+    )
     def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_jsonl_data(
         self,
         s3_setup,
@@ -311,7 +314,7 @@ class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
         t2 = time.time()
         assert t2 - t1 <= 60
 
-    @mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
+    @mark.skipif(getenv("TEST_TYPE") != "json", reason="Skipped unless TEST_TYPE=json")
     def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_json_data(
         self,
         s3_setup,

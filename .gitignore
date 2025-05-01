@@ -1,5 +1,6 @@
 sandbox.py
-test-data
+test-data/*
+!test-data/.gitkeep
 
 venv
 
