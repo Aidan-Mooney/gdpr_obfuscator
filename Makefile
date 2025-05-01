@@ -9,10 +9,12 @@ create-environment:
 	python3 -m venv venv
 
 install-requirements: create-environment
-	@echo ">>> Installing requirements."
-	$(call execute_in_env, pip install -r ./requirements.txt)
-	@echo ">>> Installing Dev Tools"
-	$(call execute_in_env, pip install -r ./dev-tools.txt)
+	@echo ">>> Installing external requirements."
+	$(call execute_in_env, pip install -r ./requirements-external.txt)
+	@echo ">>> Installing lambda requirements."
+	$(call execute_in_env, pip install -r ./requirements-lambda.txt)
+	@echo ">>> Installing dev tools requirements"
+	$(call execute_in_env, pip install -r ./requirements-dev-tools.txt)
 
 run-checks: install-requirements
 	@echo ">>> Running security checks"
