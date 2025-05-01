@@ -1,4 +1,4 @@
-# GPDR Obfuscator
+# GDPR Obfuscator
 
 A Python library to anonymize Personally Identifiable Information (PII) in data files for GDPR compliance.
 
@@ -15,6 +15,13 @@ Currently supports:
 - Works with AWS S3 input/output (via boto3)
 - Designed for integration in AWS pipelines (Lambda, Step Functions, Airflow)
 - Compatible output for boto3.put_object
+
+## Dependencies
+
+- Python 3.8+
+- pip (comes with Python 3.4+)
+- make (required for running Makefile commands)
+- boto3
 
 ## Installation
 
@@ -41,7 +48,7 @@ make run-checks
 
 During production I wrote tests to check the module obfuscates the file types in less than 60 seconds. If you would like to do this, for example, for a csv:
 
-1. Add the file to the test-data folder with the name test-csv.csv
+1. Add a 1MB CSV file to the `test-data` folder with the name `test_csv.csv`.
 
 2. Now run:
 
@@ -70,7 +77,7 @@ You can then upload output_bytes to S3 with boto3.put_object.
 ```bash
 python -m gdpr_obfuscator --event config.json --output obfuscated.csv
 ```
-This will save the output bytes to a csv file.
+This will save the obfuscated output to `obfuscated.csv` in the current directory.
 
 ## File Structure
 
@@ -86,6 +93,11 @@ gdpr-obfuscator/
 │   └── [multiple test files]
 ├── test-data/
 |
+├── LICENSE
 ├── Makefile
 └── README.md
 ```
+
+## License
+
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.

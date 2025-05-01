@@ -155,7 +155,7 @@ class TestCoreFunctionalityOfGdprObfuscator:
         assert result == expected_str
 
 
-class TestGpdrObfuscatorRaisesErrorsCorrectly:
+class TestGdprObfuscatorRaisesErrorsCorrectly:
     def test_gdpr_obfuscator_raises_type_error_with_an_invalid_arg(self):
         event1 = "I'm a string not a dict"
         with raises(TypeError) as err:
@@ -275,7 +275,7 @@ class TestGpdrObfuscatorRaisesErrorsCorrectly:
 @mark.skipif(getenv("CI") == "true", reason="Skipped in CI environment")
 class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
     @mark.skipif(getenv("TEST_TYPE") != "csv", reason="Skipped unless TEST_TYPE=csv")
-    def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_csv_data(
+    def test_runtime_of_gdpr_obfuscator_is_less_than_one_minute_for_one_mb_of_csv_data(
         self,
         s3_setup,
     ):
@@ -296,7 +296,7 @@ class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
     @mark.skipif(
         getenv("TEST_TYPE") != "jsonl", reason="Skipped unless TEST_TYPE=jsonl"
     )
-    def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_jsonl_data(
+    def test_runtime_of_gdpr_obfuscator_is_less_than_one_minute_for_one_mb_of_jsonl_data(
         self,
         s3_setup,
     ):
@@ -315,7 +315,7 @@ class TestGdprObfuscatorMeetsPerformanceAndNoneFunctionalCriteria:
         assert t2 - t1 <= 60
 
     @mark.skipif(getenv("TEST_TYPE") != "json", reason="Skipped unless TEST_TYPE=json")
-    def test_runtime_of_gpdr_obfuscator_is_less_than_one_minute_for_one_mb_of_json_data(
+    def test_runtime_of_gdpr_obfuscator_is_less_than_one_minute_for_one_mb_of_json_data(
         self,
         s3_setup,
     ):
