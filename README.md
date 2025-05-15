@@ -60,14 +60,14 @@ TEST_TYPE=csv make run-checks
 ### In Python:
 
 ```python
-from gdpr_obfuscator import obfuscate_csv
+from gdpr_obfuscator import gdpr_obfuscator
 
 event = {
     "file_to_obfuscate": "s3://my-bucket/path/to/file.csv",
     "pii_fields": ["name", "email_address"]
 }
 
-output_bytes = obfuscate_csv(event)
+output_bytes = gdpr_obfuscator(event)
 ```
 You can then upload output_bytes to S3 with boto3.put_object.
 
